@@ -3,18 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-
 enum LittleGuyEyes { open, closed, happy }
 
 enum LittleGuyMouth { happyOpen, neutral, frownOpen, suprisedOpen }
 
-
-class ActivateListener extends ChangeNotifier
-{
+class ActivateListener extends ChangeNotifier {
   void activate() => notifyListeners();
 }
-
-
 
 class LittleGuy extends StatefulWidget {
   const LittleGuy({super.key});
@@ -23,22 +18,17 @@ class LittleGuy extends StatefulWidget {
   State<LittleGuy> createState() => LittleGuyState();
 }
 
-class _LittleGuyDialog extends StatefulWidget
-{
+class _LittleGuyDialog extends StatefulWidget {
   const _LittleGuyDialog({super.key});
-  
+
   @override
   State<StatefulWidget> createState() => _LittleGuyDialogState();
-
 }
 
-class _LittleGuyDialogState extends State<_LittleGuyDialog>
-{
-
+class _LittleGuyDialogState extends State<_LittleGuyDialog> {
   bool next = false;
   bool close = false;
   String text = "";
-  
 
   @override
   Widget build(BuildContext context) => PopScope(
@@ -48,71 +38,58 @@ class _LittleGuyDialogState extends State<_LittleGuyDialog>
       next = true;
     },
 
-    child: AlertDialog(
-      content: Text(text)
-    )
+    child: AlertDialog(content: Text(text)),
   );
 }
 
-
-
 class LittleGuyState extends State<LittleGuy> {
-  LittleGuyState({
-    this.size = 100,
-  });
-
+  LittleGuyState({this.size = 100});
 
   double size;
   static const assetName = 'assets/svg/littleguy.svg';
-  static final Future<PictureInfo> _bodyPicture =
-      vg.loadPicture(const SvgAssetLoader(assetName), null);
+  static final Future<PictureInfo> _bodyPicture = vg.loadPicture(
+    const SvgAssetLoader(assetName),
+    null,
+  );
 
   _LittleGuyPainter? _littleGuyPainter;
   ActivateListener repaint = ActivateListener();
-  
 
-  
-
-  Future<GlobalKey?> openTalkDialog(String text, {List<String> options = const [], bool close = true, GlobalKey? dialogKey}) async
-  {
+  Future<GlobalKey?> openTalkDialog(
+    String text, {
+    List<String> options = const [],
+    bool close = true,
+    GlobalKey? dialogKey,
+  }) async {
     var done = false;
-    if (dialogKey == null)
-    {
+    if (dialogKey == null) {
       dialogKey = GlobalKey();
       Future<void> dialogfuture = showDialog(
         context: context,
-        builder: (context) => _LittleGuyDialog(key: dialogKey)
+        builder: (context) => _LittleGuyDialog(key: dialogKey),
       );
 
       if (close) dialogfuture.whenComplete(() => done = true);
-    }
-    else
-    {
-      if (dialogKey.currentState !is _LittleGuyDialogState) throw new Exception("Key not connected to dialog");
+    } else {
+      if (dialogKey.currentState! is _LittleGuyDialogState)
+        throw new Exception("Key not connected to dialog");
       var dialog = dialogKey.currentState as _LittleGuyDialogState;
       dialog.setState(() {
         dialog.close = close;
       });
     }
 
-    
     var talkIter = [LittleGuyMouth.happyOpen, LittleGuyMouth.neutral];
     int charIndex = 0;
-    while (!done)
-    {
+    while (!done) {
+      _littleGuyPainter?.mouth = talkIter[(charIndex ~/ 4) % 2];
 
-      _littleGuyPainter?.mouth = talkIter[(charIndex~/4)%2];
-
-      if (charIndex <= text.length)
-      {
-        if (dialogKey.currentContext != null)
-        {
-          if (dialogKey.currentState is _LittleGuyDialogState)
-          {
+      if (charIndex <= text.length) {
+        if (dialogKey.currentContext != null) {
+          if (dialogKey.currentState is _LittleGuyDialogState) {
             var dialog = dialogKey.currentState as _LittleGuyDialogState;
-            
-            if (dialog.next) 
-            {
+
+            if (dialog.next) {
               dialog.setState(() {
                 dialog.next = false;
               });
@@ -122,48 +99,36 @@ class LittleGuyState extends State<LittleGuy> {
 
             dialog.setState(() {
               dialog.text = text.substring(0, charIndex);
-            }); 
+            });
           }
         }
-        
+
         var duration = const Duration(milliseconds: 30);
 
-        if (charIndex > 0)
-        {
-          if (".?!".contains(text[charIndex - 1])) 
-          {
+        if (charIndex > 0) {
+          if (".?!".contains(text[charIndex - 1])) {
             _littleGuyPainter?.mouth = talkIter[1];
             duration = const Duration(milliseconds: 200);
           }
 
-          if (" ".contains(text[charIndex - 1])) 
-          {
+          if (" ".contains(text[charIndex - 1])) {
             _littleGuyPainter?.mouth = talkIter[1];
             duration = const Duration(milliseconds: 40);
           }
         }
 
-      
-
         charIndex += 1;
         repaint.activate();
-
 
         await Future.delayed(duration);
         if (!mounted) return null;
       }
-
-
-      
     }
-
 
     _littleGuyPainter?.mouth = talkIter[1];
     repaint.activate();
     return dialogKey;
   }
-
-  
 
   @override
   Widget build(BuildContext context) => FutureBuilder<PictureInfo>(
@@ -177,19 +142,17 @@ class LittleGuyState extends State<LittleGuy> {
         return SizedBox(width: size, height: size * 1.5);
       }
 
-      _littleGuyPainter =  _LittleGuyPainter(
+      _littleGuyPainter = _LittleGuyPainter(
         pictureInfo: pictureInfo,
         eyes: LittleGuyEyes.open,
         mouth: LittleGuyMouth.neutral,
-        repaint: repaint
+        repaint: repaint,
       );
 
       return SizedBox(
         width: size,
         height: size * 1.5,
-        child: CustomPaint(
-          painter: _littleGuyPainter
-        ),
+        child: CustomPaint(painter: _littleGuyPainter),
       );
     },
   );
@@ -200,9 +163,8 @@ class _LittleGuyPainter extends CustomPainter {
     required this.pictureInfo,
     required this.eyes,
     required this.mouth,
-    required Listenable repaint
+    required Listenable repaint,
   }) : super(repaint: repaint);
-
 
   final PictureInfo pictureInfo;
   LittleGuyEyes eyes;
@@ -213,10 +175,8 @@ class _LittleGuyPainter extends CustomPainter {
   static const _ink = Color(0xFF000000);
   static const _paper = Color(0xFFFFFFFF);
 
-
   static const mouthCenter = const Offset(5.7, 6.1);
   static const eyeCenter = const Offset(5.7, 4.0);
-
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -224,10 +184,10 @@ class _LittleGuyPainter extends CustomPainter {
     canvas.scale(size.width / _viewBoxWidth, size.height / _viewBoxHeight);
 
     canvas.save();
-    canvas.translate(_viewBoxWidth*0.2, _viewBoxHeight*0.4);
+    canvas.translate(_viewBoxWidth * 0.2, _viewBoxHeight * 0.4);
     canvas.scale(
-      (_viewBoxWidth / pictureInfo.size.width)*0.5,
-      (_viewBoxWidth / pictureInfo.size.height)*0.5,
+      (_viewBoxWidth / pictureInfo.size.width) * 0.5,
+      (_viewBoxWidth / pictureInfo.size.height) * 0.5,
     );
     canvas.drawPicture(pictureInfo.picture);
     canvas.restore();
@@ -271,11 +231,7 @@ class _LittleGuyPainter extends CustomPainter {
   void _paintEye(Canvas canvas, Offset center, Paint outline, Paint fill) {
     switch (eyes) {
       case LittleGuyEyes.open:
-        final eye = Rect.fromCenter(
-          center: center,
-          width: 1.5,
-          height: 1.7,
-        );
+        final eye = Rect.fromCenter(center: center, width: 1.5, height: 1.7);
         canvas.drawOval(eye, fill);
         canvas.drawOval(eye, outline);
       case LittleGuyEyes.closed:
@@ -341,11 +297,7 @@ class _LittleGuyPainter extends CustomPainter {
       case LittleGuyMouth.suprisedOpen:
         final mouthShape = Path()
           ..addOval(
-            Rect.fromCenter(
-              center: mouthCenter,
-              width: 1.7,
-              height: 2.0,
-            ),
+            Rect.fromCenter(center: mouthCenter, width: 1.7, height: 2.0),
           );
         canvas.drawPath(
           mouthShape,

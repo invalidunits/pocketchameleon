@@ -37,6 +37,9 @@ dependencies:
   augen: ^1.5.0
   flutter_svg: ^2.3.2
   flutter_smart_dialog: ^5.3.1
+  amplify_flutter: ^2.16.0
+  amplify_auth_cognito: ^2.16.0
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +66,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/svg/littleguy.svg
+    - assets/.env
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
